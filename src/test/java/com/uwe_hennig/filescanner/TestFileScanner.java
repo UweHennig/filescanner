@@ -5,7 +5,7 @@
  */
 package com.uwe_hennig.filescanner;
 
-import static org.junit.Assert.fail;
+import java.io.File;
 
 import org.junit.Test;
 
@@ -15,8 +15,14 @@ import org.junit.Test;
  */
 public class TestFileScanner {
 	
+	public void print(File f) {
+		System.out.println("file: " + f.getAbsolutePath());
+	}
+	
 	@Test
 	public void testScan() {
-		fail("not implemented yet");
+		File file = new File("D:\\dev\\eclipse-workspace\\github\\filescanner");
+		FileScanner scanner = new FileScanner(file);
+		scanner.scan(f -> print(f), f -> f.getAbsolutePath().endsWith(".java"));
 	}
 }
