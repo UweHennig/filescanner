@@ -5,6 +5,8 @@
  */
 package com.uwe_hennig.filescanner;
 
+import java.io.File;
+
 /**
  * IFileCallback
  * @author Uwe Hennig
