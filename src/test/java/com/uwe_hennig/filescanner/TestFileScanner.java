@@ -10,6 +10,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -31,7 +32,7 @@ public class TestFileScanner {
 	}
 	
 	public void testJavaFiles(File f) {
-		System.out.println("file: " + f.getAbsolutePath());
+		System.out.println("callback testJavaFiles file: " + f.getAbsolutePath());
 		assertTrue("Project path not found!", f.getAbsolutePath().contains("filescanner"));
 		assertTrue("Not java!", f.getAbsolutePath().contains(".java"));
 		counter++;
@@ -45,8 +46,17 @@ public class TestFileScanner {
 		assertEquals("Invalid numer of java files!", 3, counter);
 	}
 	
+	@Test
+	public void testScanJavaNonRecursive() {
+		File file = new File(getPath());
+		FileScanner scanner = new FileScanner(file);
+		scanner.setRecursive(false);
+		scanner.scan(f -> testJavaFiles(f), f -> f.getAbsolutePath().endsWith(".java"));
+		assertEquals("Invalid numer of java files!", 0, counter);
+	}
+	
 	public void testDirectory(File f) {
-		System.out.println("file: " + f.getAbsolutePath());
+		System.out.println("callback testDirectory file: " + f.getAbsolutePath());
 		assertTrue("File is not a directory!", f.isDirectory());
 		counter++;
 	}
@@ -60,7 +70,8 @@ public class TestFileScanner {
 	}
 	
 	public void testEmpty(File f) {
-		fail("found file " + f.getName());
+		System.out.println("callback testEmpty file: " + f.getAbsolutePath());
+		fail("Callback called! file " + f.getName());
 	}
 	
 	@Test
@@ -71,13 +82,14 @@ public class TestFileScanner {
 	}
 	
 	public void testMulti(File f) {
+		System.out.println("callback testMulti file: " + f.getAbsolutePath());
 		if(f.getAbsolutePath().contains("main")) {
 			if (!f.getAbsolutePath().contains("java")) {
-				fail("no java file in main!");
+				fail("No java file in main!");
 			}
 		} else {
 			if (!f.isDirectory()) {
-				fail("file is not a directory in test");
+				fail("File is not a directory in test");
 			}
 		}
 	}
@@ -109,6 +121,38 @@ public class TestFileScanner {
 		} catch (InterruptedException e) {
 			fail("exception thrown in methoe 'multiScan' " + e.getMessage());
 		}
+	}
+
+	public void testNotRecursiveDirAccepted(File f) {
+		System.out.println("callback testNotRecursiveDirAccepted file: " + f.getAbsolutePath());
+		counter++;
+	}
+	
+	@Test
+	public void notRecuriveDirAccepted() {
+		FileFilter fdir = f -> f.isDirectory();
+		
+		File file = new File(getPath());
+		FileScanner scanner = new FileScanner(file);
+		scanner.setRecursive(false);
+		scanner.scan(f -> testNotRecursiveDirAccepted(f), fdir);
+		assertTrue("Invalid numer of files!", counter > 0);
+	}
+	
+	public void fileInCurrentDirectory(File f) {
+		System.out.println("callback fileInCurrentDirectory file: " + f.getAbsolutePath());
+		counter++;
+	}
+	
+	@Test
+	public void currentDirOnly() {
+		FileFilter fdir = f -> !f.isDirectory();
+		File file = new File(getPath("/src/main/java/com/uwe_hennig/filescanner"));
+		
+		FileScanner scanner = new FileScanner(file);
+		scanner.setRecursive(false);
+		scanner.scan(f -> fileInCurrentDirectory(f), fdir);
+		assertEquals("Invalid numer of files!", 2, counter);
 	}
 	
 	private String getPath() {
