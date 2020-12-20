@@ -10,6 +10,10 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -66,10 +70,58 @@ public class TestFileScanner {
 		scanner.scan(f -> testEmpty(f), f -> false);
 	}
 	
+	public void testMulti(File f) {
+		if(f.getAbsolutePath().contains("main")) {
+			if (!f.getAbsolutePath().contains("java")) {
+				fail("no java file in main!");
+			}
+		} else {
+			if (!f.isDirectory()) {
+				fail("file is not a directory in test");
+			}
+		}
+	}
+	
+	@Test
+	public void multiScan() {
+		try {
+			File fileStartJava = new File(getPath("/src/main"));
+			File fileStartTest  = new File(getPath("/src/test"));
+			
+			FileScanner scannerJava = new FileScanner(fileStartJava);
+			FileScanner scannerTest = new FileScanner(fileStartTest);
+			
+			ExecutorService executorService = Executors.newCachedThreadPool();
+			Callable<Object> runnableJava = Executors.callable(new Runnable() {
+				@Override
+				public void run() {
+					scannerJava.scan(f -> testMulti(f), f -> f.getAbsolutePath().endsWith(".java"));
+				}
+			});
+			
+			Callable<Object> runnableTest = Executors.callable(new Runnable() {
+				@Override
+				public void run() {
+					scannerTest.scan(f -> testMulti(f), f -> f.isDirectory());
+				}
+			});
+			executorService.invokeAll(Arrays.asList(runnableJava, runnableTest));
+		} catch (InterruptedException e) {
+			fail("exception thrown in methoe 'multiScan' " + e.getMessage());
+		}
+	}
+	
 	private String getPath() {
+		return getPath(null);
+	}
+	
+	private String getPath(String sub) {
 		String path = TestFileScanner.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 		int pos = path.lastIndexOf("filescanner") + "filescanner".length();
 		path = path.substring(0, pos);
+		if (sub != null) {
+			path = path + sub;
+		}
 		System.out.println("start path: " + path);
 		return path;
 	}
