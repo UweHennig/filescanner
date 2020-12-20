@@ -25,9 +25,17 @@ public class FileScanner {
 		fileStack.push(startDir);
 	}
 	
-	public void scan(IFileCallback callback, final FileFilter filter) {
+	public void scan(final IFileCallback callback) {
+		scan(callback, f -> true);
+	}
+	
+	public void scan(final IFileCallback callback, final FileFilter filter) {
 		if (callback == null) {
 			throw new InvalidParameterException("Callback parameter is null!");
+		}
+		
+		if (filter == null) {
+			throw new InvalidParameterException("Callback filter is null!");
 		}
 		
 		FileFilter combinedFilter = f -> f.isDirectory() || filter.accept(f); 
