@@ -8,15 +8,16 @@ package com.uwe_hennig.filescanner;
 import java.io.File;
 import java.io.FileFilter;
 import java.security.InvalidParameterException;
+import java.util.ArrayDeque;
 import java.util.Arrays;
-import java.util.Stack;
+import java.util.Deque;
 
 /**
  * FileScanner
  * @author Uwe Hennig
  */
 public class FileScanner {
-	private Stack<File> fileStack = new Stack<>();
+	private Deque<File> fileStack = new ArrayDeque<>();
 	private boolean recursive = true;
 	
 	public FileScanner(File startDir) {
